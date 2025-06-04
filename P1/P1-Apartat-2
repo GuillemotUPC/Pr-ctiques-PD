@@ -1,0 +1,28 @@
+#include <Arduino.h>
+
+#define LED_BUILTIN 2
+#define DELAY 500
+
+
+// Definir el pin de salida
+#define LED_PIN 2
+
+
+void setup() {
+    // Configurar el pin del LED como salida utilizando el registro GPIO
+    pinMode(LED_PIN, OUTPUT);
+    
+    // Iniciar el puerto serie
+    Serial.begin(115200);
+}
+
+void loop() {
+    // Caso 1: Con envío por puerto serie y funciones de Arduino
+    digitalWrite(LED_PIN, HIGH);
+    delay(500);
+    Serial.println("ON");
+    digitalWrite(LED_PIN, LOW);
+    delay(500);
+    Serial.println("OFF");
+
+}
