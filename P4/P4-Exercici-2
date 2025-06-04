@@ -1,0 +1,78 @@
+#include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
+
+// Definición del pin del LED
+const int ledPin = 0;
+
+// Declaración del semáforo
+SemaphoreHandle_t xSemaphore;
+
+// Declaración de las funciones de las tareas
+void TaskTurnOn(void *pvParameters);
+void TaskTurnOff(void *pvParameters);
+
+void setup() {
+  // Configuración del pin del LED como salida
+  pinMode(ledPin, OUTPUT);
+
+  // Creación del semáforo binario
+  xSemaphore = xSemaphoreCreateBinary();
+
+  // Inicialización del semáforo en estado disponible
+  xSemaphoreGive(xSemaphore);
+
+  // Creación de la tarea que enciende el LED
+  xTaskCreate(
+    TaskTurnOn,        // Función que implementa la tarea
+    "Task Turn On",    // Nombre de la tarea
+    1000,              // Tamaño de la pila en palabras
+    NULL,              // Parámetro de la tarea
+    1,                 // Prioridad de la tarea
+    NULL               // Handle de la tarea
+  );
+
+  // Creación de la tarea que apaga el LED
+  xTaskCreate(
+    TaskTurnOff,       // Función que implementa la tarea
+    "Task Turn Off",   // Nombre de la tarea
+    1000,              // Tamaño de la pila en palabras
+    NULL,              // Parámetro de la tarea
+    1,                 // Prioridad de la tarea
+    NULL               // Handle de la tarea
+  );
+}
+
+void loop() {
+  // El bucle principal permanece vacío ya que las tareas se ejecutan en FreeRTOS
+  vTaskDelay(pdMS_TO_TICKS(1000));
+}
+
+// Función de la tarea que enciende el LED
+void TaskTurnOn(void *pvParameters) {
+  (void) pvParameters;
+  for (;;) {
+    // Espera hasta que el semáforo esté disponible
+    if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
+      digitalWrite(ledPin, HIGH);  // Enciende el LED
+      vTaskDelay(pdMS_TO_TICKS(1000)); // Espera 1 segundo
+      xSemaphoreGive(xSemaphore);  // Libera el semáforo
+    }
+    vTaskDelay(pdMS_TO_TICKS(10)); // Pequeño retraso para evitar monopolizar la CPU
+  }
+}
+
+// Función de la tarea que apaga el LED
+void TaskTurnOff(void *pvParameters) {
+  (void) pvParameters;
+  for (;;) {
+    // Espera hasta que el semáforo esté disponible
+    if (xSemaphoreTake(xSemaphore, portMAX_DELAY) == pdTRUE) {
+      digitalWrite(ledPin, LOW);   // Apaga el LED
+      vTaskDelay(pdMS_TO_TICKS(1000)); // Espera 1 segundo
+      xSemaphoreGive(xSemaphore);  // Libera el semáforo
+    }
+    vTaskDelay(pdMS_TO_TICKS(10)); // Pequeño retraso para evitar monopolizar la CPU
+  }
+}
