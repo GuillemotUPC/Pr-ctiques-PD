@@ -1,0 +1,40 @@
+#include <Arduino.h>
+// Inclou les llibreries necessàries per a generar àudio, llegir fitxers i comunicar-se via I2S
+#include "AudioGeneratorAAC.h"
+#include "AudioOutputI2S.h"
+#include "AudioFileSourcePROGMEM.h"
+#include "sampleaac.h"
+#include "Arduino.h"
+
+// Declaració d'objectes globals
+AudioFileSourcePROGMEM *in;    // Font d'àudio des de la memòria flash
+AudioGeneratorAAC *aac;        // Descodificador AAC
+AudioOutputI2S *out;           // Sortida d'àudio per I2S (altaveus/DAC)
+
+void setup() {
+  Serial.begin(115200);  // Inicialitza la comunicació sèrie per a depuració
+
+  // Configura la font d'àudio amb les dades AAC emmagatzemades a la memòria flash
+  in = new AudioFileSourcePROGMEM(sampleaac, sizeof(sampleaac));
+  
+  // Inicialitza el descodificador AAC i la sortida I2S
+  aac = new AudioGeneratorAAC();
+  out = new AudioOutputI2S();
+  
+  // Configuració de la sortida d'àudio
+  out->SetGain(0.125);         // Estableix el volum al 12.5% (evita distorsió)
+  out->SetPinout(18, 17, 15); // BCK=18, LRCK=17, DATA=15
+  
+  // Inicia la reproducció: descodifica AAC i envia a la sortida I2S
+  aac->begin(in, out);
+}
+
+void loop() {
+  if (aac->isRunning()) {  // Si l'àudio s'està reproduint
+    aac->loop();           // Processa el següent bloc d'àudio (crida cada iteració del bucle)
+  } else {                 // Si l'àudio ha acabat
+    aac->stop();           // Atura el descodificador
+    Serial.printf("Sound Generator\n");  // Missatge de depuració
+    delay(1000);           // Espera 1 segon abans de tornar a comprovar
+  }
+}
