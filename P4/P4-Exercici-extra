@@ -1,0 +1,63 @@
+#include "Arduino.h"
+
+// Definim els pins dels LEDs
+const int ledPin1 = 0; // Pin del primer LED
+const int ledPin2 = 45; // Pin del segon LED
+
+// Definim els intervals de parpelleig en mil·lisegons
+const int interval1 = 250; // 500 ms per al primer LED
+const int interval2 = 100; // 1000 ms per al segon LED
+
+// Funcions de les tasques
+void blinkLed1(void *parameter);
+void blinkLed2(void *parameter);
+
+void setup() {
+    // Inicialitzem els pins dels LEDs com a sortida
+    pinMode(ledPin1, OUTPUT);
+    pinMode(ledPin2, OUTPUT);
+
+    // Creem la primera tasca per al primer LED
+    xTaskCreate(
+        blinkLed1,       // Funció que implementa la tasca
+        "Blink LED 1",   // Nom de la tasca
+        1000,            // Mida de la pila en bytes
+        NULL,            // Paràmetre de la tasca
+        1,               // Prioritat de la tasca
+        NULL             // Handle de la tasca
+    );
+
+    // Creem la segona tasca per al segon LED
+    xTaskCreate(
+        blinkLed2,       // Funció que implementa la tasca
+        "Blink LED 2",   // Nom de la tasca
+        1000,            // Mida de la pila en bytes
+        NULL,            // Paràmetre de la tasca
+        1,               // Prioritat de la tasca
+        NULL             // Handle de la tasca
+    );
+}
+
+void loop() {
+    // El bucle principal queda buit perquè les tasques s'executen de manera independent
+}
+
+// Implementació de la primera tasca
+void blinkLed1(void *parameter) {
+    while (true) {
+        digitalWrite(ledPin1, HIGH); // Encén el LED
+        vTaskDelay(interval1 / portTICK_PERIOD_MS); // Espera l'interval especificat
+        digitalWrite(ledPin1, LOW);  // Apaga el LED
+        vTaskDelay(interval1 / portTICK_PERIOD_MS); // Espera l'interval especificat
+    }
+}
+
+// Implementació de la segona tasca
+void blinkLed2(void *parameter) {
+    while (true) {
+        digitalWrite(ledPin2, HIGH); // Encén el LED
+        vTaskDelay(interval2 / portTICK_PERIOD_MS); // Espera l'interval especificat
+        digitalWrite(ledPin2, LOW);  // Apaga el LED
+        vTaskDelay(interval2 / portTICK_PERIOD_MS); // Espera l'interval especificat
+    }
+}
