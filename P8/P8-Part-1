@@ -1,0 +1,20 @@
+void setup() {
+  Serial.begin(115200); // Inicialitza la comunicació (UART0) a 115200 
+  Serial2.begin(9600, SERIAL_8N1, 16, 17); 
+  // Inicialitza la UART2 a 9600 i assinga que el pin GPIO16 serà RXD2 d'entrada i GPIO17 serà TXD2 de sortida
+
+  Serial.println("Inici del bucle de comunicació UART2"); 
+  // Missatge de control que confirma l’inici del programa
+}
+
+void loop() {
+  if (Serial.available()) { // Si hi ha dades disponibles des del terminal (UART0)
+    char c = Serial.read(); // Llegeix el caràcter rebut
+    Serial2.write(c);       // L’envia pel port UART2
+  }
+
+  if (Serial2.available()) { // Si hi ha dades retornades des del port UART2
+    char c = Serial2.read(); // Llegeix el caràcter
+    Serial.write(c);         // L’envia de nou al terminal perquè es mostri
+  }
+}
