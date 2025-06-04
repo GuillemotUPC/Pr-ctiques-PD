@@ -1,0 +1,21 @@
+#include <Arduino.h>
+#define LED_PIN 2 // Definir el pin del LED
+#define DELAY 1000 // Temps d'espera de 1000 ms
+
+void setup() {
+  // Establir el pin com a sortida directament a través dels registres
+  pinMode(LED_PIN, OUTPUT); // Això segueix sent necessari
+  Serial.begin(115200);     // Inicialitzar la comunicació sèrie
+}
+
+void loop() {
+  // Engegar el LED utilitzant el registre GPIO
+  uint32_t *gpio_out = (uint32_t *)GPIO_OUT_REG;
+  *gpio_out |= (1 << LED_PIN);  // Activar el bit corresponent al pin 2
+  Serial.println("ON");         // Enviar "ON" pel port sèrie
+ 
+  // Apagar el LED utilitzant el registre GPIO
+  *gpio_out &= ~(1 << LED_PIN); // Desactivar el bit corresponent al pin 2
+  Serial.println("OFF");        // Enviar "OFF" pel port sèrie
+ 
+}
