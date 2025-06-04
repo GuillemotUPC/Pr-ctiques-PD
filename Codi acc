@@ -1,0 +1,80 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <MPU9250_asukiaaa.h>
+
+// LCD (adreça 0x27, 20x4)
+LiquidCrystal_I2C lcd(0x27, 20, 4);
+
+// Sensor MPU9250
+MPU9250_asukiaaa mySensor;
+
+// Variables de detecció de passes
+int passos = 0;
+float accel_threshold = 1.2; // Llindar per detectar una passa (ajustar segons calgui)
+unsigned long lastStepTime = 0;
+unsigned long stepDelay = 300; // Temps mínim entre passes (ms)
+
+void setup() {
+  Wire.begin();
+  Serial.begin(115200);
+
+  // LCD
+  lcd.init();
+  lcd.backlight();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Inicialitzant MPU...");
+
+  // Sensor
+  mySensor.setWire(&Wire);
+  mySensor.beginAccel();
+  mySensor.beginGyro();
+
+  delay(1000);
+  lcd.clear();
+  lcd.setCursor(0, 0); lcd.print("Accel X:");
+  lcd.setCursor(0, 1); lcd.print("Accel Y:");
+  lcd.setCursor(0, 2); lcd.print("Accel Z:");
+  lcd.setCursor(0, 3); lcd.print("Passes: 0 Dist: 0m");
+}
+
+void loop() {
+  // Actualitza dades de l'acceleròmetre
+  mySensor.accelUpdate();
+
+  float ax = mySensor.accelX();
+  float ay = mySensor.accelY();
+  float az = mySensor.accelZ();
+
+  // Calcula magnitud total d'acceleració
+  float a_total = sqrt(ax * ax + ay * ay + az * az);
+
+  unsigned long now = millis();
+
+  // Detecta passa
+  if (a_total > accel_threshold && (now - lastStepTime) > stepDelay) {
+    passos++;
+    lastStepTime = now;
+  }
+
+  // Escriu valors a la pantalla LCD
+  lcd.setCursor(10, 0); lcd.print(ax, 2);
+  lcd.setCursor(10, 1); lcd.print(ay, 2);
+  lcd.setCursor(10, 2); lcd.print(az, 2);
+  lcd.setCursor(0, 3);
+  lcd.print("Passes: ");
+  lcd.print(passos);
+  lcd.print(" Dist: ");
+  lcd.print(passos); // 1 metre per passa
+  lcd.print("m   "); // Espais per esborrar valors antics
+
+  // Missatge pel monitor sèrie
+  Serial.print("Accel X: "); Serial.print(ax, 2);
+  Serial.print(" | Y: "); Serial.print(ay, 2);
+  Serial.print(" | Z: "); Serial.print(az, 2);
+  Serial.print(" | Magnitud: "); Serial.print(a_total, 2);
+  Serial.print(" | Passes: "); Serial.print(passos);
+  Serial.print(" | Dist: "); Serial.print(passos); Serial.println("m");
+
+  delay(150); // Freqüència de lectura (150 ms)
+}
