@@ -1,0 +1,48 @@
+#include "Audio.h"
+#include "SD.h"
+#include "FS.h"
+#include "SPI.h"
+
+// Configuració de pins per a l'ESP32-S3
+#define SD_CS       10   // Pin Chip Select de la SD
+#define SPI_MOSI    11   // Pin MOSI (SPI)
+#define SPI_MISO    13   // Pin MISO (SPI)
+#define SPI_SCK     12   // Pin SCK (SPI)
+#define I2S_BCLK    18   // Bit Clock (I2S)
+#define I2S_LRC     17   // Left/Right Clock (I2S)
+#define I2S_DOUT    15   // Data Out (I2S)
+
+Audio audio; // Objecte d'àudio
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Inicialitza l'SPI amb els pins de l'ESP32-S3
+  SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
+  
+  // Inicialitza la targeta SD
+  if (!SD.begin(SD_CS)) {
+    Serial.println("Error en inicialitzar la SD");
+    return;
+  }
+  
+  // Configura els pins I2S per al MAX98357
+  audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+  audio.setVolume(12); // Volum entre 0 i 21
+  
+  // Reprodueix l'arxiu des de la SD
+  audio.connecttoFS(SD, "audio.wav");
+}
+
+void loop() {
+  audio.loop(); // Manté la reproducció activa
+}
+
+// Funcions de depuració (opcionals)
+void audio_info(const char *info) {
+  Serial.printf("Info: %s\n", info);
+}
+
+void audio_eof_mp3(const char *info) {
+  Serial.printf("Fi de l'àudio: %s\n", info);
+}
